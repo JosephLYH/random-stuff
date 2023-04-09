@@ -63,11 +63,12 @@ class SudokuBoard:
     def solve(self):
         while len(self.stack) > 0:
             board = self.stack.pop() # get the last board
-            if self.is_solved(board):
-                return board
 
             if not self.is_valid(board):
                 continue
+
+            if self.is_solved(board):
+                return board
 
             x, y = self.find_next_cell(board)
             for value in board[y][x]:
