@@ -18,10 +18,16 @@ class SudokuBoard:
         self.stack.append(deepcopy(self.board))
 
     def wave_function_collapse(self, board, x, y, value):
+        stack = deque()
+
         for i in range(9):
             if (i != x) and value in board[y][i]:
+                if len(board[y][i]) == 2:
+                    stack.append((i, y))
                 board[y][i].remove(value)
             if (i != y) and value in board[i][x]:
+                if len(board[i][x]) == 2:
+                    stack.append((x, i))
                 board[i][x].remove(value)
         
         x0 = (x // 3) * 3
@@ -32,7 +38,14 @@ class SudokuBoard:
         for i in range(3):
             for j in range(3):
                 if (i != yr or j != xr) and value in board[y0 + i][x0 + j]:
+                    if len(board[y0 + i][x0 + j]) == 2:
+                        stack.append((x0 + j, y0 + i))
                     board[y0 + i][x0 + j].remove(value)
+
+        stack = set(stack)
+        for i, j in stack:
+            if len(board[j][i]) == 1:
+                self.wave_function_collapse(board, i, j, board[j][i][0])
 
     def is_solved(self, board):
         for y in range(9):
@@ -61,20 +74,24 @@ class SudokuBoard:
         return x, y
 
     def solve(self):
+        if self.is_valid(self.board) and self.is_solved(self.board):
+            return self.board
+        
         while len(self.stack) > 0:
             board = self.stack.pop() # get the last board
-
-            if not self.is_valid(board):
-                continue
-
-            if self.is_solved(board):
-                return board
 
             x, y = self.find_next_cell(board)
             for value in board[y][x]:
                 new_board = deepcopy(board)
                 new_board[y][x] = [value]
                 self.wave_function_collapse(new_board, x, y, value)
+
+                if not self.is_valid(new_board):
+                    continue
+
+                if self.is_solved(new_board):
+                    return new_board
+
                 self.stack.append(new_board)
 
         return None
